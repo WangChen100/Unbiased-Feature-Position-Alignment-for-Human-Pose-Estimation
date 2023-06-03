@@ -267,7 +267,7 @@ class HighResolutionModule(nn.Module):
 
         x_fuse = []
         for i in range(len(self.fuse_layers)):
-            y = self.fuse_layers[i][0](x[0])
+            y = self.fuse_layers[i][0](x[0])  # y = x[0] if i == 0 else self.fuse_layers[i][0](x[0])
             for j in range(1, self.num_branches):
                 y = y + self.fuse_layers[i][j](x[j])
             # y = x[0] if i == 0 else self.fuse_layers[i][0](x[0])

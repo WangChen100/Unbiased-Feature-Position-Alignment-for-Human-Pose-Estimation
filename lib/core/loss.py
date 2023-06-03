@@ -2,6 +2,7 @@
 # Copyright (c) Microsoft
 # Licensed under the MIT License.
 # Written by Bin Xiao (Bin.Xiao@microsoft.com)
+# Modified by Chen Wang (wangchen100@163.com)
 # ------------------------------------------------------------------------------
 
 from __future__ import absolute_import
@@ -10,9 +11,6 @@ from __future__ import print_function
 
 import torch
 import torch.nn as nn
-# import numpy as np
-# from sklearn.mixture import GaussianMixture as GMM
-# from core.inference import get_max_preds
 
 class JointsOffsetLoss(nn.Module):
     def __init__(self, use_target_weight, offset_weight, smooth_l1):

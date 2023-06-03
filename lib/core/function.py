@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft
 # Licensed under the MIT License.
 # Written by Bin Xiao (Bin.Xiao@microsoft.com)
-# Modified by Hanbin Dai (daihanbin.ac@gmail.com) and Feng Zhang (zhangfengwcy@gmail.com)
+# Modified by Chen Wang (wangchen100@163.com)
 # ------------------------------------------------------------------------------
 
 from __future__ import absolute_import
@@ -137,8 +137,7 @@ def validate(config, val_loader, val_dataset, model, criterion, output_dir,
 
             if config.TEST.FLIP_TEST:
                 # this part is ugly, because pytorch has not supported negative index
-                # input_flipped = np.flip(input.cpu().numpy(), 3).copy()
-                # input_flipped = torch.from_numpy(input_flipped).cuda()
+
                 input_flipped = input.flip(3)
                 outputs_flipped = model(input_flipped)
 
@@ -320,23 +319,3 @@ class AverageMeter2(AverageMeter):
                 self.avgs[i] = self.sum[i] / self.count[i]
         self.val = self.vals[0]
         self.avg = self.avgs[0]
-
-
-# def binary_mask(batch_heatmaps):
-#     assert isinstance(batch_heatmaps, np.ndarray), \
-#         'batch_heatmaps should be numpy.ndarray'
-#     assert batch_heatmaps.ndim == 4, 'batch_images should be 4-ndim'
-
-#     batch_size = batch_heatmaps.shape[0]
-#     num_joints = batch_heatmaps.shape[1]
-#     width = batch_heatmaps.shape[3]
-#     heatmaps_reshaped = batch_heatmaps.reshape((batch_size, num_joints, -1))
-#     mask_reshaped = np.zeros_like(heatmaps_reshaped)
-#     idx = np.argmax(heatmaps_reshaped, 2)
-
-#     for b in range(batch_size):
-#         for k in range(num_joints):
-#             mask_reshaped[b, k, int(idx[b,k])] = 1
-#     mask = mask_reshaped.reshape((batch_size, num_joints, -1, width))
-
-#     return mask

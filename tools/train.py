@@ -2,6 +2,7 @@
 # Copyright (c) Microsoft
 # Licensed under the MIT License.
 # Written by Bin Xiao (Bin.Xiao@microsoft.com)
+# Modified by Chen Wang (wangchen100@163.com)
 # ------------------------------------------------------------------------------
 
 from __future__ import absolute_import
@@ -189,7 +190,8 @@ def main():
         # evaluate on validation set
         perf_indicator = validate(
             cfg, valid_loader, valid_dataset, model, criterion,
-            final_output_dir, writer_dict)
+            final_output_dir, writer_dict
+        )
 
         lr_scheduler.step()
 

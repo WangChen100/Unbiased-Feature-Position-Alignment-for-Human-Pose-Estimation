@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft
 # Licensed under the MIT License.
 # Written by Bin Xiao (Bin.Xiao@microsoft.com)
-# Modified by Hanbin Dai (daihanbin.ac@gmail.com)
+# Modified by Chen Wang (wangchen100@163.com)
 # ------------------------------------------------------------------------------
 
 from __future__ import absolute_import
@@ -50,12 +50,10 @@ class JointsDataset(Dataset):
         self.target_type = cfg.MODEL.TARGET_TYPE
         self.image_size = np.array(cfg.MODEL.IMAGE_SIZE)
         self.heatmap_size = np.array(cfg.MODEL.HEATMAP_SIZE)
-        # self.feat_stride = (self.image_size-1.0) / (self.heatmap_size-1.0)
         self.sigma = cfg.MODEL.SIGMA
         self.use_different_joints_weight = cfg.LOSS.USE_DIFFERENT_JOINTS_WEIGHT
         self.joints_weight = 1
         self.locref_stdev = cfg.DATASET.LOCREF_STDEV
-        # self.mask_sigma = cfg.MODEL.MASK_SIGMA
         self.kpd = cfg.LOSS.KPD
         self.transform = transform
         self.db = []
@@ -97,7 +95,7 @@ class JointsDataset(Dataset):
 
         if (w-1) > self.aspect_ratio * (h-1):
             h = (w-1.0) / self.aspect_ratio+1.0
-        elif w < self.aspect_ratio * h:
+        elif (w-1) < self.aspect_ratio * (h-1):
             w = (h-1.0) * self.aspect_ratio+1.0
 
         scale = np.array(
@@ -262,15 +260,12 @@ class JointsDataset(Dataset):
         tmp_size = int(self.sigma * 3 + 0.5)
 
         for joint_id in range(self.num_joints):
-            # joints_hm = joints[joint_id, :2] / self.feat_stride
-
             target_weight[joint_id] = \
-                 self.adjust_target_weight(joints[joint_id, :2], target_weight[joint_id], tmp_size)  # joints_hm
+                 self.adjust_target_weight(joints[joint_id], target_weight[joint_id], tmp_size)
             
             if not target_weight[joint_id]:
                 continue
 
-            # Generate gaussian heatmap and offset matrix
             if target_weight[joint_id] > 0.5:
                 hm[joint_id], om[2*joint_id:2*joint_id+2] = \
                     draw_dense_reg(self.heatmap_size,
