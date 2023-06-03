@@ -22,6 +22,7 @@ DATASET:
   SCALE_FACTOR: 0.35
   TEST_SET: 'val2017'
   TRAIN_SET: 'train2017'
+  LOCREF_STDEV: 3.0
 MODEL:
   INIT_WEIGHTS: true
   NAME: pose_hrnet
@@ -34,7 +35,7 @@ MODEL:
   HEATMAP_SIZE:
   - 24
   - 32
-  SIGMA: 1
+  SIGMA: 1.0
   EXTRA:
     PRETRAINED_LAYERS:
     - 'conv1'
@@ -90,6 +91,7 @@ MODEL:
       FUSE_METHOD: SUM
 LOSS:
   USE_TARGET_WEIGHT: true
+  KPD: 3.0
 TRAIN:
   BATCH_SIZE_PER_GPU: 64
   SHUFFLE: true

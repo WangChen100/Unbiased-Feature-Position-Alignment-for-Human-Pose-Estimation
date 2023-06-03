@@ -22,11 +22,10 @@ def draw_dense_reg(hm_size, joint, sigma, locref_stdev, kpd):
     heatmap[heatmap < np.finfo(heatmap.dtype).eps * heatmap.max()] = 0  # gaussian heatmap
 
     offset_map /= locref_stdev  # rescale offset map
-
     mask01 = np.where(h <= kpd**2, 1, 0)  # 0-1 mask
-    offset_map *= mask01[None, ...]
+    # offset_map *= mask01[None, ...]
         
-    return heatmap, offset_map
+    return heatmap, offset_map, mask01
 
 
 if __name__ == '__main__':

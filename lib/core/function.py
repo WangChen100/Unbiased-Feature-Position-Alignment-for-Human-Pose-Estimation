@@ -35,7 +35,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch,
     model.train()
 
     end = time.time()
-    for i, (input, target, target_offset, target_weight, meta) in enumerate(train_loader):
+    for i, (input, target, target_offset, mask, target_weight, meta) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
@@ -44,6 +44,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch,
 
         target = target.cuda(non_blocking=True)
         target_offset = target_offset.cuda(non_blocking=True)
+        mask = mask.cuda(non_blocking=True)
         target_weight = target_weight.cuda(non_blocking=True)
 
         if isinstance(outputs, list):
@@ -54,7 +55,8 @@ def train(config, train_loader, model, criterion, optimizer, epoch,
             output = outputs[:,:config.MODEL.NUM_JOINTS]
             output_offset = outputs[:,config.MODEL.NUM_JOINTS:]
             loss, offset_loss = criterion(output, output_offset,
-                                          target, target_offset, target_weight)
+                                          target, target_offset, 
+                                          mask, target_weight)
 
         # compute gradient and do update step
         optimizer.zero_grad()
@@ -125,7 +127,7 @@ def validate(config, val_loader, val_dataset, model, criterion, output_dir,
     idx = 0
     with torch.no_grad():
         end = time.time()
-        for i, (input, target, target_offset, target_weight, meta) in enumerate(val_loader):
+        for i, (input, target, target_offset, mask, target_weight, meta) in enumerate(val_loader):
             # compute output
             outputs = model(input)
             if isinstance(outputs, list):
@@ -166,9 +168,11 @@ def validate(config, val_loader, val_dataset, model, criterion, output_dir,
             target = target.cuda(non_blocking=True)
             target_offset = target_offset.cuda(non_blocking=True)
             target_weight = target_weight.cuda(non_blocking=True)
+            mask = mask.cuda(non_blocking=True)
 
             loss, _ = criterion(output, output_offset, 
-                                          target, target_offset, target_weight)
+                                target, target_offset, 
+                                mask, target_weight)
 
             num_images = input.size(0)
 

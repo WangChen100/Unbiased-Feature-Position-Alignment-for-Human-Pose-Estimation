@@ -186,10 +186,11 @@ class JointsDataset(Dataset):
                 joints[i, 0:2] = affine_transform(joints[i, 0:2], trans)
                 joints_heatmap[i, 0:2] = affine_transform(joints_heatmap[i, 0:2], trans_heatmap)
 
-        target, target_offset, target_weight = self.generate_target(joints_heatmap, joints_vis)
+        target, target_offset, mask, target_weight = self.generate_target(joints_heatmap, joints_vis)
 
         target = torch.from_numpy(target)
         target_offset = torch.from_numpy(target_offset)
+        mask = torch.from_numpy(mask)
         target_weight = torch.from_numpy(target_weight)
 
         meta = {
@@ -204,7 +205,7 @@ class JointsDataset(Dataset):
             'score': score
         }
 
-        return input, target, target_offset, target_weight, meta
+        return input, target, target_offset, mask, target_weight, meta
 
     def select_data(self, db):
         db_selected = []
@@ -256,6 +257,8 @@ class JointsDataset(Dataset):
                       dtype=np.float32)
         om = np.zeros((2*self.num_joints, self.heatmap_size[1], self.heatmap_size[0]),
                       dtype=np.float32)
+        mask = np.zeros((self.num_joints, self.heatmap_size[1], self.heatmap_size[0]),
+                        dtype=np.float32)
 
         tmp_size = int(self.sigma * 3 + 0.5)
 
@@ -267,7 +270,7 @@ class JointsDataset(Dataset):
                 continue
 
             if target_weight[joint_id] > 0.5:
-                hm[joint_id], om[2*joint_id:2*joint_id+2] = \
+                hm[joint_id], om[2*joint_id:2*joint_id+2], mask[joint_id] = \
                     draw_dense_reg(self.heatmap_size,
                                    joints[joint_id, :2],
                                    self.sigma,
@@ -277,7 +280,7 @@ class JointsDataset(Dataset):
         if self.use_different_joints_weight:
             target_weight = np.multiply(target_weight, self.joints_weight)
 
-        return hm, om, target_weight
+        return hm, om, mask, target_weight
 
     def adjust_target_weight(self, joint, target_weight, tmp_size):
         mu_x = int(joint[0] + 0.5)

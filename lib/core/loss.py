@@ -20,34 +20,32 @@ class JointsOffsetLoss(nn.Module):
         self.criterion = nn.MSELoss(reduction='mean')
         self.criterion_offset = nn.SmoothL1Loss(reduction='mean') if smooth_l1 else nn.L1Loss(reduction='mean')
 
-    def forward(self, heatmaps, offsetmaps, target, target_offset, target_weight):
+    def forward(self, heatmaps, offsetmaps, target, target_offset, mask, target_weight):
         """
         calculate loss
-        :param output: [batch, joints, height, width]
-        :param hm_hps: [batch, 2*joints, height, width]
+        :param heatmaps: [batch, joints, height, width]
+        :param offsetmaps: [batch, 2*joints, height, width]
         :param target: [batch, joints, height, width]
         :param target_offset: [batch, 2*joints, height, width]
-        :param mask_01: [batch, joints, height, width]
-        :param mask_g: [batch, joints, height, width]
+        :param mask: [batch, joints, height, width]
         :param target_weight: [batch, joints, 1]
         :return: loss=joint_loss+weight*offset_loss
         """
         batch_size, num_joints, _, _ = heatmaps.shape
-
+        offsetmaps = 2.0*torch.tanh(offsetmaps)
         heatmaps_pred = heatmaps.reshape((batch_size, num_joints, -1)).split(1, dim=1)
         heatmaps_gt = target.reshape((batch_size, num_joints, -1)).split(1, dim=1)
         offsets_pred = offsetmaps.reshape((batch_size, 2*num_joints, -1)).split(2, dim=1)
         offsets_gt = target_offset.reshape((batch_size, 2*num_joints, -1)).split(2, dim=1)
-
-        del batch_size, _
+        mask = mask.reshape((batch_size, num_joints, -1)).split(1, dim=1)
 
         joint_l2_loss, offset_loss = 0.0, 0.0
 
         for idx in range(num_joints):
-            offset_pred = offsets_pred[idx] * heatmaps_gt[idx]  # [batch_size, 2, h*w]
-            offset_gt = offsets_gt[idx] * heatmaps_gt[idx]      # [batch_size, 2, h*w]
-            heatmap_pred = heatmaps_pred[idx].squeeze()     # [batch_size, h*w]
-            heatmap_gt = heatmaps_gt[idx].squeeze()         # [batch_size, h*w]
+            offset_pred = offsets_pred[idx] * mask[idx]  # [batch_size, 2, h*w]
+            offset_gt = offsets_gt[idx] * mask[idx]      # [batch_size, 2, h*w]
+            heatmap_pred = heatmaps_pred[idx].squeeze()  # [batch_size, h*w]
+            heatmap_gt = heatmaps_gt[idx].squeeze()      # [batch_size, h*w]
 
             if self.use_target_weight:
                 joint_l2_loss += 0.5 * self.criterion(
